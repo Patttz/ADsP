@@ -2,6 +2,7 @@
 Donghun's private repo
 
 # Fundamental statistics analysis 기초 통계 분석
+# R code below
 data(mtcars)                      # datasets 패키지의 "mtcars"라는 데이터셋의 마일(mpg), 총마력(hp)의 상관관계 분석을 실시한다
 a <- mtcars$mpg                   # a에 mpg칼럼의 값들을 저장
 b <- mtcars$hp                    # b에 hp칼럼의 값들을 저장
