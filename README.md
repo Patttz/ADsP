@@ -1,5 +1,5 @@
 # ADsP
-Donghun's private repo
+Study for getting ADsP certification
 
 # Fundamental statistics analysis 기초 통계 분석
 # R code below
