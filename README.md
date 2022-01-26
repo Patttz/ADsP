@@ -256,3 +256,136 @@ backward.aic = step(lm.full.Model, lpsa~1, direction="backward")
 
 # 시계열 분석
 
+시간의 흐름에 따라 관찰된 데이터를 시계열 데이터 또는 시계열 자료라고 한다. 이러한 시계열 자료에는 주식가격 데이터, 실업률, 기후데이터 등 우리 주위에서 많이 찾아볼 수 있다.
+시계열 자료는 대부분 비정상정을 띄는데 이를 정상성 시계열 자료로 변환하여 분석을 실시 한다. 정상성이란 평균이 일정할 때, 분산이 일정할 때, 공분산도 단지 시차에만 의존하고
+실제 특정 시점 t, s에는 의존하지 않을 때 만족한다. 시계열 자료를 분석하 때에는 회귀분석(계량경제)방법, Box-Jenkins 방법, 지수평활법, 시계열 분해법 등이 있으며, 시계열 모형에는 
+자기회귀 모형(AR, Autoregressive model), 이동평균 모형(MA, Moving Average model), 자기회귀누적이동평균 모형(ARIMA, autoregressive integrated moving average model)이 있다.
+
+## R을 이용한 시계열분석
+
+ 영국 왕들의 사망 시 나이 데이터를 이용한 시계열분석
+
+* 영국 왕 42명의 사망 시 나이 예제는 비계절성을 띄는 시계열 자료
+* 비계절성을 띄는 시계열 자료는 트렌드 요소, 불규칙 요소로 구성
+* 20번째 왕까지는 38세에 55까지 수명을 유지하고, 그 이후부터는 수명이 늘어서 40번째 왕은 73세까지 생존
+
+R code below
+
+1. 분해 시계열
+
+가) 자료 읽기 및 그래프 그리기
+
+library(tseries)
+
+library(forecast)
+
+library(TTR)
+
+king <- scan("http://robjhyndman.com/tsdldata/misc/king.dat", skip=3)
+
+king.ts <- ts(king)
+
+plot.ts(king.ts)
+
+<img width="340" alt="결과" src="https://user-images.githubusercontent.com/87562188/151259408-fa566a23-f743-43dd-9d29-765c160f3623.png">
+
+나) 3년마다 평균을 내서 그래프를 부드럽게 표현
+
+king.sma3 <- SMA(king.ts, n=3)
+
+plot.ts(king.sma3)
+
+<img width="338" alt="결과" src="https://user-images.githubusercontent.com/87562188/151259958-8354e446-8d09-42ce-936b-29cb1d2f2ce9.png">
+
+다) 8년마다 평균을 내서 그래프를 부드럽게 표현
+
+king.sma8 <- SMA(king.ts, n=3)
+
+plot.ts(king.sma8)
+
+<img width="342" alt="결과" src="https://user-images.githubusercontent.com/87562188/151260131-cdf89dfa-ebf0-43b0-8a32-6fd3e502a306.png">
+
+2. ARIMA 모델
+
+가) 개요
+
+* ARIMA 모델은 정상성 시계열에 한해 사용한다.
+* 비정상 시계열 자료는 차분해 정상성으로 만족하는 조건의 시계열로 바꿔준다.
+* 이전 그래프에서 평균이 시간에 따라 일정치 않은 모습을 보이므로 비정상시계열이다. 따라서 차분을 진행한다.
+* 1차 차분 결과에서 평균과 분산이 시간에 따라 의존하지 않음을 확인한다.
+* ARIMA(p,1,q)모델이며 차분을 1번 해야 정상성을 만족한다.
+ 
+R code below
+
+king.ff1 <- diff(king.ts, differences=1)
+
+plot.ts(king.ff1)
+
+<img width="341" alt="결과" src="https://user-images.githubusercontent.com/87562188/151260758-bbca0831-caed-418a-81a2-cceca03d1d01.png">
+
+나) ACF와 PACF를 통한 적합한 ARIMA 모델 결정
+
+ ① ACF
+  * lag는 0부터 값을 갖는데, 너무 많은 구간을 설정하면 그래프를 보고 판단하기 어렵다.
+  * ACF값이 lag 1인 지점 빼고는 모두 점선 구간 안에 있고, 나머지는 구간 안에 있다.
+
+R code below
+
+acf(king.ff1, lag.max=20)
+
+<img width="339" alt="결과" src="https://user-images.githubusercontent.com/87562188/151261581-4d77135b-c704-4c3e-8cfd-3e44f5fc3c4e.png">
+
+acf(king.ff1, lag.max=20, plot=FALSE)
+
+<img width="318" alt="결과" src="https://user-images.githubusercontent.com/87562188/151261649-f786da7f-15c1-4518-9c2e-a14701c8d0fd.png">
+
+ ② PACF - PACF 값이 lag 1,2,3에서 점선 구간을 초과하고 음의 값을 가지며 절단점이 lag 4이다.
+ 
+R code below
+
+pacf(king.ff1, lag.max=20)
+
+<img width="340" alt="결과" src="https://user-images.githubusercontent.com/87562188/151262048-02aee39b-f06d-4ed0-84da-e45e5da1a159.png">
+
+pacf(king.ff1, lag.max=20, plot=FALSE)
+
+<img width="314" alt="결과" src="https://user-images.githubusercontent.com/87562188/151262145-a33878d4-b665-4489-afdc-66f63b7fd468.png">
+
+다) 종합
+
+* ARMA 후보들이 생성
+
+① ARMA(3,0) 모델 : PACF 값이 lag4에서 절단점을 가짐. AR(3) 모형
+
+② ARMA(0,10 모델 : ACF 값이 lag2에서 절단점을 가짐. MA(1) 모형
+
+③ ARMA(p,q) 모델 : 그래서 AR모형과 MA모형을 혼합
+
+라) 적절한 ARIMA 모형 찾기
+ * forecast package에 내장된 auto.arima() 함수 이용
+ * 영국 왕의 사망 나이 데이터의 적절한 ARIMA모형은 ARIMA(0,1,1)이다.
+ 
+R code below
+
+auto.arima(king)
+
+<img width="317" alt="결과" src="https://user-images.githubusercontent.com/87562188/151262619-21afbe04-3e0c-4961-a5e0-0e3270ed1d13.png">
+
+마) 예측
+* 42명의 영국왕 중에서 마지막 왕의 사망시 나이는 56세
+* 43번재에서 52번째 왕까지 10명의 왕의 사망시 나이를 예측한 결과 67.75살로 추정된다.
+* 5명 정도만 예측하고 싶다면, 옵션에 h=5를 입력한다.
+* 신뢰 구간은 80%~95% 사이
+
+R code below
+
+king.arima <- arima(king, order=c(0, 1, 1))
+
+king.forecasts <- forecast(king.arima)
+
+king.forecasts
+
+<img width="322" alt="결과" src="https://user-images.githubusercontent.com/87562188/151263063-59fdbc27-2416-46fc-907f-e0c4daa6df88.png">
+
+# 다차원척도법
+
