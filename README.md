@@ -389,3 +389,148 @@ king.forecasts
 
 # 다차원척도법
 
+객체간 근접성(proximity)을 시각화하는 통계기법이다. 군집분석과 같이 객체들을 대상으로 변수들을 측정한 후에 개체들 사이의 유사성/비유사성을 측정하여 개체들을 2차원 또는 3차원
+공간상에 점으로 표현하여 개체들 사이의 집단화를 시각적으로 표현하는 분석방법이다.
+
+## 다차원척도법 종류
+
+###### 계량적 MDS(Multi Dimensional Scailing)
+* 데이터가 구간척도나 비율척도인 경우 활용한다.(전통적인 다차원 척도법) N개의 케이스에 대해서 p개의 특성변수가 있는 경우, 각 개체들간의 유클리드 거리행렬을 계산하고 개체들간의 
+비유사성S(거리제곱 행렬의 선형함수)를 공간상에 표현한다.
+
+cmdscale 사례
+
+* MASS package의 eurodist 자료를 이용한다.
+* 유럽의 21개 도시들 사이의 거리를 측정한다.
+* cmdscale을 이용하여 2차원으로 21개 도시들을 매핑한다.
+* 종축은 북쪽 도시를 상단에 표시하기 위해 부호를 바꾼다.
+
+R code below
+
+library(MASS)
+
+loc <- cmdscale(eurodist)
+
+x <- loc[, 1]
+
+y <- -loc[, 2]
+
+plot(x, y, type="n", asp=1, main="Metrics MDS")
+
+<img width="417" alt="결과" src="https://user-images.githubusercontent.com/87562188/151594239-8306d0a8-4a46-46d3-9db2-14aa34de71b6.png">
+
+text(x, y, rownames(loc), cex=0.7)
+
+ <img width="416" alt="결과" src="https://user-images.githubusercontent.com/87562188/151594483-6c30da29-63be-4816-ba7f-fe5560750c34.png">
+
+abline(v=0, h=0, lty=2, lwd=0.5)
+
+<img width="419" alt="결과" src="https://user-images.githubusercontent.com/87562188/151594630-06e50bd0-9b96-4e51-9a58-7ce4982cbc43.png">
+
+###### 비계량적 MDS(nonmetric MDS)
+* 데이터가 순서척도인 경우 활용한다. 개체들간의 거리가 순서로 주어진 경우에는 순서척도를 거리의 속성과 같도록 변환(monotone transformation)하여 거리를 생성한 후 적용한다.
+
+isoMDS사례
+
+* MASS package의 Swiss 자료를 이용하여 2차원으로 도시들을 매핑한다.
+* 1888년경의 스위스연방 중 47개의 불어권 주의 토양의 비옥도 지수와 여러 사회경제적 지표를 측정한 자료이다.
+
+R code below
+
+library(MASS)
+
+data(swiss)
+
+swiss.x <- as.matrix(swiss[, -1])
+
+swiss.dist <- dist(swiss.x)
+
+swiss.mds <- isoMDS(swiss.dist)
+
+plot(swiss.mds$points, type="n")
+
+<img width="422" alt="결과" src="https://user-images.githubusercontent.com/87562188/151596112-e577d353-12ca-4594-b119-ca077c328c42.png">
+
+text(swiss.mds$points, labels=as.character(1:nrow(swiss.x)))
+
+<img width="413" alt="결과" src="https://user-images.githubusercontent.com/87562188/151596274-65bf59a4-72e7-439f-a97f-34db40bf0c8e.png">
+
+abline(v=0, h=0, lty=2, lwd=0.5)
+
+<img width="415" alt="결과" src="https://user-images.githubusercontent.com/87562188/151596382-f18843dd-55c8-4688-8e32-1491c335ee70.png">
+
+# 주성분 분석
+
+여러 변수들의 변량을 '주성분(principal Component)'이라는 서로 상관성이 높은 변수들의 선형결합으로 만들어 기존의 상관성이 높은 변수들을 요약, 축소하는 기법이다.
+첫 번째 주성분으로 전체 변동을 가장 많이 설명할 수 있도록 하고, 두 번째 주성분으로는 첫 번째 주성분과는 상관성이 없어서(낮아서) 첫 번쨰 주성분이 설명하지 못하는 나머지
+변동을 정보의 손실 없이 가장 많이 설명할 수 있도록 변수들의 선형조합을 만든다.
+
+## 주성분 분석 사례
+
+USArrests 자료
+
+* 1973년 미국 50개주의 100,000명의 인구 당 체포된 세 가지 강력범죄수(assault,murder, rape)와 각 주마다 도시에 거주하는 인구의 비율(%)로 구성되어 있다.
+* 변수들 간의 척도의 차이가 상당히 크기 떄문에 상관행렬을 사용하여 분석한다.
+* 특이치 분해를 사용하는 경우 자료 행렬의 각 변수의 평균과 제곱의 합이 1로 표준화되었다고 가정할 수 있다.
+
+R code below
+
+1. 4개의 변수들 간의 산점도
+
+library(datasets)
+
+data(USArrests)
+
+pairs(USArrests, panel = panel.smooth, main = "USArrests data")
+
+<img width="415" alt="결과" src="https://user-images.githubusercontent.com/87562188/151598381-d7a67952-c560-4097-963c-460b852ac2b4.png">
+
+* Murder와 UrbanPop 비율간의 관련성이 작아 보인다.
+
+2. summary
+* 제1주성분과 제2주성분까지의 누적 분산비율은 대략 86.8%로 2개의 주성분 변수를 활용하여 전체 데이터의 86.8%를 설명할 수 있다.
+* 주성분들에 의해 설명되는 변동의 비율은 Screeplot을 통해 확인 가능하다.
+
+US.prin <- princomp(USArrests, cor = TRUE)
+
+summary(US.prin)
+
+<img width="476" alt="결과" src="https://user-images.githubusercontent.com/87562188/151598909-23810b3a-5352-4a21-8a95-c8a7b76a14db.png">
+
+screeplot(US.prin, npcs=4, type="lines")
+
+<img width="419" alt="결과" src="https://user-images.githubusercontent.com/87562188/151598967-2c280219-52e3-4728-af23-e2c8b04d32d8.png">
+
+3. Loading
+* 네 개의 변수가 각 주성분 Comp.1-Comp.4까지 기여하는 가중치가 제시된다.
+* 제1주성분에는 네 개의 변수가 평균적으로 기여한다.
+* 제2주성분에서는(Murder,Assault)와(UrbanPop, Rape)의 계수의 부호가 서로 다르다.
+
+loadings(US.prin)
+
+<img width="473" alt="결과" src="https://user-images.githubusercontent.com/87562188/151599578-a708bdd0-da38-44dd-a0a3-1079c3ae1980.png">
+
+4. Scores
+* 각 주성분 Comp.1-Comp.4의 선형식을 통해 각 지역(record)별로 얻은 결과를 계산한다.
+
+US.prin$scores
+
+<img width="471" alt="결과" src="https://user-images.githubusercontent.com/87562188/151600039-a729f07c-a2ea-468b-bc8e-fd71eae02414.png">
+
+5. 제 1-2주성분에 의한 행렬도
+* 조지아,메릴랜드,뉴 멕시코 등은 폭행과 살인의 비율이 상대적으로 높은 지역이다.
+* 미시간, 텍사스 등은 강간의 비율이 높은 지역이다.
+* 콜로라도, 캘리포니아, 뉴저지 등은 도시에 거주하는 인구의 비율이 높은 지역이다.
+* 아이다호, 뉴 햄프셔, 아이오와 등의 도시들은 도시에 거주하는 인구의 비율이 상대적으로 낮으면서 3대 강력범죄도 낮다.
+
+arrests.pca <- prcomp(USArrests,center = TRUE,scale. = TRUE)
+
+biplot(arrests.pca,scale=0)
+
+<img width="417" alt="결과" src="https://user-images.githubusercontent.com/87562188/151600964-65850c22-ace3-4087-8f6a-55efdf315b26.png">
+
+# 5장. 데이터 마이닝
+
+
+
+
