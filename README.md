@@ -529,8 +529,90 @@ biplot(arrests.pca,scale=0)
 
 <img width="417" alt="결과" src="https://user-images.githubusercontent.com/87562188/151600964-65850c22-ace3-4087-8f6a-55efdf315b26.png">
 
-# 5장. 데이터 마이닝
+# 5장. 정형 데이터 마이닝
+ 데이터 마이닝은 대용량 데이터에서 의미있는 패턴을 파악하거나 예측하여 의사결정에 활용하는 방법이다.
+ 
+## ROCR 패키지로 성과분석
+
+1. ROC Curve(Receiver Operating Characteristic Curve)
+ * ROC Curve란 가로축을 FPR(False Positive Rate=1-특이도)값으로 두고, 세로축을 TPR(True Positive Rate, 민감도)값으로 두어 시각화한 그래프이다.
+ * 2진 분류(binary classfication)에서 모형의 성능을 평가하기 위해 많이 사용되는 척도이다.
+ * 그래프가 왼쪽 상단에 가깝게 그려질수록 올바르게 예측한 비율은 높고, 잘못 예측한 비율은 낮음을 의미한다. 따라서 **ROC곡선 아래의 면적을 의미하는 AUROC(Area Under ROC)**
+   값이 크면 클수록(1에 가까울수록) 모형의 성능이 좋다고 평가한다.
+   
+2. R 실습 코드
+* ROCR패키지는 binary classfication만 지원가능
+
+R code below
+
+library(rpart)
+
+library(party)
+
+libarary(ROCR)
+
+x <- kyphosis[sample(1:nrow(kyphosis), nrow(kyphosis), replace=F),]
+
+x.train <- kyphosis[1:floor(nrow(x)*0.75),]
+
+x.evaluate <- kyphosis[floor(nrow(x)*0.75):nrow(x),]
+
+x.model <- cforest(Kyphosis~Age+Number+Start, data=x.train)
+
+x.evaluate$prediction <- predict(x.model, newdata=x.evaluate)
+
+x.evaluate$correct <- x.evaluate$prediction == x.evaluate$Kyphosis
+
+print(paste("% of predicted classfication correct", mean(x.evaluate$correct)))
+
+x.evaluate$probabilities <- 1- unlist(treeresponse(x.model, newdata=x.evaluate), use.names=F)[seq(1,nrow(x.evaluate)*2.2)]
+
+* 그래프1
+
+pred <- prediction(x.evaluate$probabilities, x.evaluate$Kyphosis)
+
+perf <- performance(pred, "tpr", "fpr")
+
+plot(perf, main="ROC curve", colorize=T)
+
+<img width="341" alt="결과" src="https://user-images.githubusercontent.com/87562188/152264415-b47a6968-ac71-4f54-811d-14cbcf946685.png">
+
+* 그래프2
+
+perf <- performance(pred, "lift", "rpp")
+
+plot(perf, main="lift curve", colorize=T)
+
+<img width="342" alt="결과" src="https://user-images.githubusercontent.com/87562188/152264655-db43c3e0-f9b9-4059-8276-c31420689d93.png">
+
+## 이익도표(Lift chart)
+
+1. 이익도표의 개념
+* 이익도표는 분류모형의 성능을 평가하기 위한 척도로, 분류된 관측치에 대해 얼마나 예측이 잘 이루어졌는지를 나타내기 위해 임의로 나눈 각 등급별로 반응검출율, 반응률, 리프트
+ 등의 정보를 산출하여 나타내는 도표이다.
+* 2000명의 전체고객 중 381명이 상품을 구매한 경우에 대해 이익도표를 만드는 과정을 예로 들어보면, 먼저 데이터셋의 각 관측치에 대한 예측활용을 내림차순으로 정렬한다. 이후 
+ 데이터를 10개의 구간으로 나눈 다음 각 구간의 반응율(% response)을 산출한다. 또한 기본 향상도(baseline lift)에 비해 반응률이 몇 배나 높은지를 계산하는데 이것을 향상도(lift)라고 한다.
+* 이익도표의 각 등급은 예측확률에 따라 매겨진 순위이기 때문에, 상위 등급에서는 더 높은 반응률을 보이는 것이 좋은 모형이라고 평가할 수 있다.
+
+2. 이익도표의 활용 예시
+
+![결과](https://user-images.githubusercontent.com/87562188/152265244-027d60b7-7deb-46cb-83ec-d9c52e2215e1.jpg)
+
+* 전체 2000명 중 381명이 구매
+* Frequency of "buy" : 2000명 중 실제로 구매한 사람
+* % Captured Response : 반응검출율 = 해당 등급의 실제 구매자 / 전체 구매자
+* % response : 반응률 = 해당 등급의 실제 구매자 / 200명
+* Lift : 향상도 = 반응률 / 기본 향상도
+  좋은 모델이라면 Lift가 빠른 속도로 감소해야 한다.
+ 
+ ![결과](https://user-images.githubusercontent.com/87562188/152265523-737427cb-f965-410f-9d50-a26d8eab4ec7.jpg)
+
+* 등급별로 향상도가 급격하게 변동할수록 좋은 모형이라고 할 수 있고, 각 등급별로 향상도가 들쭉날쭉하면 좋은 모형이라고 볼 수 없다.
+
+# 분류분석
 
 
+
+ 
 
 
