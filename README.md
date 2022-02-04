@@ -610,6 +610,84 @@ plot(perf, main="lift curve", colorize=T)
 * 등급별로 향상도가 급격하게 변동할수록 좋은 모형이라고 할 수 있고, 각 등급별로 향상도가 들쭉날쭉하면 좋은 모형이라고 볼 수 없다.
 
 # 분류분석
+ 데이터가 어떤 그룹에 속하는지 예측하는데 사용되는 기법이다. 클러스터링과 유사하지만, 분류분석은 각 그룹이 정의되어 있다. 교사학습(supervised learning)에 해당하는 예측기법이다.
+ 
+ 가. 분류기법
+ * 회귀분석, 로지스틱 회귀분석(Logistic Regression)
+ * 의사결정나무(Decision Tree), CART(Classification and Regression Tree), C5.0
+ * 베이지안 분류(Bayesian Classfication), Naive Bayesian
+ * 인공신경망(ANN, Artificial Neural Network)
+ * 지지도벡터기계(SVM. Support Vector Machine)
+ * k 최근접 이웃(KNN, K-Nearest Neighborhood)
+ * 규칙기반의 분류와 사례기반추론(Case-Based Reasoning)
+ 
+ ## 로지스틱 회귀분석 사례
+ 
+ R code below
+ 
+ a <- iris[iris$Species=="setosa" | iris$Species=="versicolor",]
+ 
+ b <- glm(Species ~ Sepal.Length, data=a, family=binomial)
+ 
+ summary(b)
+ 
+ <img width="322" alt="결과" src="https://user-images.githubusercontent.com/87562188/152468286-826f765f-bf6f-49af-91a0-d23782a91f99.png">
+
+###### R 프로그램 결과 해석
+* 종속변수: Species, 독립변수: Sepal.Length
+* Sepal.Length가 한 단위 증가함에 따라 Species(Y)가 1에서 2로 바뀔 때 오즈(Odds)가 exp(5.140)~170배 증가한다.
+* Null deviance는 절편만 포함하는 모형의 완전 모형으로부터의 이탈도(deviance)를 나타내며 p-값=P(x²(99)>138.629)~0.005으로 통계적으로 유의하므로 적합결여를 나타낸다.
+* Residual deviance는 예측변수 Sepal.Length가 추가된 적합 모형의 이탈도를 나타낸다. Null deviance에 비해 자유도 1기준에 이탈도의 감소가 74.4정도의 큰 감소를 보이며
+ p-값=P(x²(99)>64.211)~0.997으로 통계적으로 유의하지 못해 귀무가설을 기각하지 못한다.
+* 따라서 적합값이 관측된 자료를 잘 적합 한다고 말할 수 있다.
+
+## 의사결정나무
+ 의사결정나무는 분류함수를 의사결정 규칙으로 이뤄진 **나무 모양으로 그리는 방법**이다. 의사결정나무는 주어진 **입력값에 대하여 출력값을 예측하는 모형**으로 
+ 분류나무와 회귀나무모형이 있다.
+ 
+## 의사결정나무 사례
+
+가. party 패키지를 이용한 의사결정나무
+* party 패키지는 의사결정나무를 사용하기 편한 다양한 분류 패키지 중 하나이다.
+* 분실값을잘 처리하지 못하는 문제를 갖고 있는 것이 단점이다.
+* tree에 투입된 데이터가 표시가 되지 않거나 predixt가 실패하는 경우 문제가 발생할 수 있다.
+
+R code below
+
+1. iris data를 이용한 분석
+ * iris data의 30%는 test data, 70% training data로 생성한다.
+ 
+idx <- sample(2, nrow(iris), replace=TRUE, prob=c(0.7, 0.3))
+
+train.data <- iris[idx==1,]
+
+test.data <- iris[idx==2,]
+
+2. train.data를 이용하여 모형생성
+
+iris.tree <- ctree(Species~., data=train.data)
+
+plot(iris.tree)
+
+<img width="338" alt="결과" src="https://user-images.githubusercontent.com/87562188/152470807-1d95d998-de8b-42bd-be14-36375e6514bc.png">
+
+plot(iris.tree, type="simple")
+
+<img width="341" alt="결과" src="https://user-images.githubusercontent.com/87562188/152470877-3e855ef3-fe99-42ab-93e7-47ccac004953.png">
+
+3. 예측된 데이터와 실제 데이터의 비교
+
+table(predict(iris.tree), train.data$Species)
+
+<img width="317" alt="결과" src="https://user-images.githubusercontent.com/87562188/152471291-a28196fd-0e98-4e49-82da-5fe001e3e924.png">
+
+test.pre <- predict(iris.tree, newdata=test.data)
+
+table(test.pre, test.data$Species)
+
+<img width="311" alt="결과" src="https://user-images.githubusercontent.com/87562188/152471436-379de6fb-2dce-49f8-b5d3-56a40e15b817.png">
+
+# 앙상블 분석
 
 
 
