@@ -693,9 +693,68 @@ table(test.pre, test.data$Species)
 <img width="311" alt="결과" src="https://user-images.githubusercontent.com/87562188/152471436-379de6fb-2dce-49f8-b5d3-56a40e15b817.png">
 
 # 앙상블 분석
+ 주어진 자료로부터 여러 개의 예측모형들을 만든 후 예측모형들을 조합하여 하나의 최종 예측 모형을 만드는 방법으로 다중 모델 조합(combining multiple models), 
+분류기 조합(classifier combination)이 있다.
+## 앙상블 기법의 종류
+1) 배깅
+  Breiman(1994)에 의해 제안된 배깅은 주어진 자료에서 여러 개의 붓스트랩(bootstrap) 자료를 생성하고 각 붓스트랩 자료에 예측모형을 만든 후 결합하여 최종 예측모형을
+  만드는 방법이다. 붓스트랩(bootstrap)은 주어진 자료에서 동일한 크기의 표본을 랜덤 복원추출로 뽑은 자료를 의미한다.
 
+2) 부스팅
+  예측력이 약한 모형(weak learner)들을 결합하여 강한 예측모형을 만드는 방법이다. 부스팅 방법 중 Freund&Schapire가 제안한 **Adaboost**는 이진분류 문제에서 랜덤 
+  분류기보다 조금 더 좋은 분류기 n개에 각각 가중치를 설정하고 n개의 분류기를 결합하여 최종 분류기는 만드는 방법을 제안하였다.
+  
+3) 랜덤 포레스트(random forest)
+  Breiman(2001)에 의해 개발된 랜덤 포레스트는 의사결정나무의 특징인 분산이 크다는 점을 고려하여 배깅과 부스팅보다 더 많은 무작위성을 주어 **약한 학습기들을 생성한 후 이를 
+  선형 결합하여 최종 학습기를 만드는 방법** 이다.
+  
+## randomforest 패키지를 이용한 분석(iris data)
 
+R code below
 
+① 모형만들기
+
+idx <- sample(2, nrow(iris), replace=TRUE, prob=c(0.7, 0.3))
+
+train.data <- iris[idx==2,]
+
+test.data <- iris[idx==1,]
+
+r.f <- randomForest(Species~., data=train.data, ntree=100, proximity=TRUE)
+
+② 오차율 계산하기
+
+table(predict(r.f), train.data$Species)
+
+<img width="311" alt="결과" src="https://user-images.githubusercontent.com/87562188/152665980-cacad6ca-8f6d-4d33-a1ab-20ad730adfb2.png">
+
+③ 그래프 그리기-1
+
+plot(r.f)
+
+<img width="340" alt="결과" src="https://user-images.githubusercontent.com/87562188/152666002-9fa1a36e-3047-41c6-a09d-376b1700a9d7.png">
+
+④ 그래프 그리기-2
+
+varImpPlot(r.f)
+
+<img width="338" alt="결과" src="https://user-images.githubusercontent.com/87562188/152666023-3ef4e5a6-5b8d-4e5b-adb7-bd8b40b9e1f8.png">
+
+⑤ test data 예측
+
+pre.rf <- predict(r.f, newdata=test.data)
+
+table(pre.rf, test.data$Species)
+
+<img width="314" alt="결과" src="https://user-images.githubusercontent.com/87562188/152666057-bb017267-81cf-40e8-9404-34927936d292.png">
+
+⑥ 그래프 그리기-3
+
+plot(margin(r.f, test.data$Species))
+
+<img width="340" alt="결과" src="https://user-images.githubusercontent.com/87562188/152666067-ed7c3887-56c8-4215-8fb1-aab20eb2546a.png">
+
+# 인공신경망 분석
  
 
 
